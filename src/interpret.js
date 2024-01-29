@@ -1,29 +1,32 @@
 'use strict';
+const { SOURCES } = require('./source-tracker');
 const ast = require('./ast');
 
 /*
 	Given a parsed AST, this generates the final object represented by the TOML.
+	If a SourceTracker is provided, it will track the source locations of all
+	keys and value of all generated objects (i.e., "tables") and arrays.
  */
 
-module.exports = (definitions) => {
+module.exports = (definitions, tracker) => {
 	const explicitTables = new Set();
 	const implicitTables = new Set();
 	const appendableArrays = new Set();
 	return buildRoot();
 
 	function buildRoot() {
-		const root = Object.create(null);
+		const root = createTable();
 		let current = root;
 
 		for (const definition of definitions) {
 			if (definition instanceof ast.ScopeNode) {
 				if (definition.isArrayTable) {
-					current = append(root, definition.key.parts);
+					current = appendTable(root, definition.key.parts, definition.source);
 				} else {
-					current = define(root, definition.key.parts);
+					current = defineTable(root, definition.key.parts, definition.source);
 				}
 			} else if (definition instanceof ast.AssignmentNode) {
-				assign(current, definition.key.parts, getValue(definition.value));
+				assign(current, definition.key.parts, definition.value);
 			} else {
 				throw new TypeError('Unrecognized definition type');
 			}
@@ -35,11 +38,13 @@ module.exports = (definitions) => {
 	function traverse(obj, keyPath, traverseAny = false) {
 		const length = keyPath.length - 1;
 		for (let i = 0; i < length; ++i) {
-			const key = keyPath[i].value;
+			const keyPart = keyPath[i];
+			const key = keyPart.value;
 			const value = obj[key];
 			if (value === undefined) {
-				const table = Object.create(null);
+				const table = createTable();
 				implicitTables.add(table);
+				tracker && track(obj, key, keyPart.source, getKeySource(keyPath, i));
 				obj[key] = table;
 				obj = table;
 			} else if (implicitTables.has(value)) {
@@ -49,57 +54,63 @@ module.exports = (definitions) => {
 			} else if (traverseAny && appendableArrays.has(value)) {
 				obj = value[value.length - 1];
 			} else {
-				const source = keyPath[0].source.to(keyPath[i].source);
+				const source = getKeySource(keyPath, i);
 				throw source.error('Cannot redefine existing key').done();
 			}
 		}
 		return obj;
 	}
 
-	function define(obj, keyPath) {
+	function defineTable(obj, keyPath, source) {
 		obj = traverse(obj, keyPath, true);
 
-		const key = keyPath[keyPath.length - 1].value;
+		const keyPart = keyPath[keyPath.length - 1];
+		const key = keyPart.value;
 		if (obj[key] === undefined) {
-			const table = Object.create(null);
+			const table = createTable();
 			explicitTables.add(table);
+			tracker && track(obj, key, keyPart.source, source);
 			obj[key] = table;
 			return table;
 		} else {
-			const source = keyPath[0].source.to(keyPath[keyPath.length - 1].source);
+			const source = getKeySource(keyPath);
 			throw source.error('Cannot redefine existing key').done();
 		}
 	}
 
-	function append(obj, keyPath) {
+	function appendTable(obj, keyPath, source) {
 		obj = traverse(obj, keyPath, true);
 
-		const key = keyPath[keyPath.length - 1].value;
-		const value = obj[key];
+		const keyPart = keyPath[keyPath.length - 1];
+		const key = keyPart.value;
+		let value = obj[key];
 		if (value === undefined) {
-			const element = Object.create(null);
-			const array = [element];
-			appendableArrays.add(array);
-			obj[key] = array;
-			return element;
-		} else if (appendableArrays.has(value)) {
-			const element = Object.create(null);
-			value.push(element);
-			return element;
+			value = createArray();
+			appendableArrays.add(value);
+			tracker && track(obj, key, keyPart.source, source);
+			obj[key] = value;
+		}
+		if (appendableArrays.has(value)) {
+			const table = createTable();
+			tracker && track(value, value.length, source, source);
+			value.push(table);
+			return table;
 		} else {
-			const source = keyPath[0].source.to(keyPath[keyPath.length - 1].source);
+			const source = getKeySource(keyPath);
 			throw source.error('Cannot redefine existing key').done();
 		}
 	}
 
-	function assign(obj, keyPath, value) {
+	function assign(obj, keyPath, valueNode) {
 		obj = traverse(obj, keyPath);
 
-		const key = keyPath[keyPath.length - 1].value;
+		const keyPart = keyPath[keyPath.length - 1];
+		const key = keyPart.value;
 		if (obj[key] === undefined) {
-			obj[key] = value;
+			tracker && track(obj, key, keyPart.source, valueNode.source);
+			obj[key] = getValue(valueNode);
 		} else {
-			const source = keyPath[0].source.to(keyPath[keyPath.length - 1].source);
+			const source = getKeySource(keyPath);
 			throw source.error('Cannot redefine existing key').done();
 		}
 	}
@@ -109,15 +120,16 @@ module.exports = (definitions) => {
 			throw new TypeError('Expected node to be a ValueNode');
 		}
 		if (node instanceof ast.InlineTableNode) {
-			const table = Object.create(null);
+			const table = createTable();
 			for (const assignmentNode of node.assignments) {
-				assign(table, assignmentNode.key.parts, getValue(assignmentNode.value));
+				assign(table, assignmentNode.key.parts, assignmentNode.value);
 			}
 			return table;
 		}
 		if (node instanceof ast.InlineArrayNode) {
-			const array = [];
+			const array = createArray();
 			for (const valueNode of node.values) {
+				tracker && track(array, array.length, valueNode.source, valueNode.source);
 				array.push(getValue(valueNode));
 			}
 			return array;
@@ -127,4 +139,24 @@ module.exports = (definitions) => {
 		}
 		return node.value;
 	}
+
+	function createTable() {
+		const table = Object.create(null);
+		tracker && tracker[SOURCES].set(table, new Map());
+		return table;
+	}
+
+	function createArray() {
+		const array = [];
+		tracker && tracker[SOURCES].set(array, new Map());
+		return array;
+	}
+
+	function track(obj, key, keySource, valueSource) {
+		tracker[SOURCES].get(obj).set(key, { key: keySource, value: valueSource });
+	}
 };
+
+function getKeySource(keyPath, lastIndex = keyPath.length - 1) {
+	return keyPath[0].source.to(keyPath[lastIndex].source);
+}
