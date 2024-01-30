@@ -1,6 +1,9 @@
 'use strict';
 const { Source } = require('super-sources');
-const { LocalTime, LocalDate, LocalDateTime, OffsetDateTime } = require('./dates');
+const { LocalTime } = require('./dates/local-time');
+const { LocalDate } = require('./dates/local-date');
+const { LocalDateTime } = require('./dates/locale-date-time');
+const { OffsetDateTime } = require('./dates/offset-date-time');
 
 /*
 	These nodes make up the AST (abstract syntax tree) of a TOML document.

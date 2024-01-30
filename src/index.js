@@ -1,6 +1,9 @@
 'use strict';
 const { File } = require('super-sources');
-const { LocalTime, LocalDate, LocalDateTime, OffsetDateTime } = require('./dates');
+const { LocalTime } = require('./dates/local-time');
+const { LocalDate } = require('./dates/local-date');
+const { LocalDateTime } = require('./dates/locale-date-time');
+const { OffsetDateTime } = require('./dates/offset-date-time');
 const { SourceTracker } = require('./source-tracker');
 const parseAST = require('./parse');
 const interpret = require('./interpret');

@@ -1,13 +1,11 @@
 'use strict';
 const { EOL } = require('os');
+const { LocalTime, parseLocalTime } = require('./dates/local-time');
+const { LocalDate, parseLocalDate } = require('./dates/local-date');
+const { LocalDateTime, parseLocalDateTime } = require('./dates/locale-date-time');
+const { OffsetDateTime, parseOffsetDateTime } = require('./dates/offset-date-time');
 const Parser = require('./parser');
 const ast = require('./ast');
-const {
-	parseLocalTime,
-	parseLocalDate,
-	parseLocalDateTime,
-	parseOffsetDateTime,
-} = require('./dates');
 
 const NEWLINE = /\r?\n/y;
 const DATE = /[0-9]{4}-[0-9]{2}-[0-9]{2}/y;
@@ -300,25 +298,25 @@ function specialFloatLiteral(parser) {
 function dateLiteral(parser) {
 	const date = parser.getCaptured();
 	if (!parser.accept(/[Tt\x20]/y)) {
-		const value = safeParse(parseLocalDate, date);
+		const value = new LocalDate(safeParse(parseLocalDate, date));
 		return new ast.LocalDateNode(date, value);
 	}
 
 	const time = parser.expect(TIME);
 	if (parser.accept(/[Zz]|[+-][0-9]{2}:[0-9]{2}/y)) {
 		const source = date.to(parser.getCaptured());
-		const value = safeParse(parseOffsetDateTime, source);
+		const value = new OffsetDateTime(safeParse(parseOffsetDateTime, source));
 		return new ast.OffsetDateTimeNode(source, value);
 	} else {
 		const source = date.to(time);
-		const value = safeParse(parseLocalDateTime, source);
+		const value = new LocalDateTimeNode(safeParse(parseLocalDateTime, source));
 		return new ast.LocalDateTimeNode(source, value);
 	}
 }
 
 function timeLiteral(parser) {
 	const time = parser.getCaptured();
-	const value = safeParse(parseLocalTime, time);
+	const value = new LocalTime(safeParse(parseLocalTime, time));
 	return new ast.LocalTimeNode(time, value);
 }
 
