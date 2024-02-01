@@ -7,15 +7,20 @@ const { SourceError } = require('super-sources');
 const { parse, LocalTime, LocalDate, LocalDateTime, OffsetDateTime } = require('..');
 
 const EXPECT_FAILURE = [
-	'valid/integer/long', // JavaScript numbers don't have 64 bits of precisions
-	'invalid/encoding/bad-codepoint', // We parse strings, not raw buffers
-	'invalid/encoding/bad-utf8-in-comment', // We parse strings, not raw buffers
-	'invalid/encoding/bad-utf8-in-multiline', // We parse strings, not raw buffers
-	'invalid/encoding/bad-utf8-in-multiline-literal', // We parse strings, not raw buffers
-	'invalid/encoding/bad-utf8-in-string', // We parse strings, not raw buffers
-	'invalid/encoding/bad-utf8-in-string-literal', // We parse strings, not raw buffers
+	// This fails because JavaScript numbers don't have 64 bits of precisions.
+	'valid/integer/long',
+
+	// These fails because we parse strings, not raw buffers.
+	'invalid/encoding/bad-codepoint',
+	'invalid/encoding/bad-utf8-in-comment',
+	'invalid/encoding/bad-utf8-in-multiline',
+	'invalid/encoding/bad-utf8-in-multiline-literal',
+	'invalid/encoding/bad-utf8-in-string',
+	'invalid/encoding/bad-utf8-in-string-literal',
 ];
 
+// The tests expect all newlines to be UNIX-style, even though the spec allows
+// us to normalize newlines within multiline strings for the current platform.
 const WINDOWS_NEWLINES = [
 	'valid/array/string-with-comma-2',
 	'valid/comment/tricky',
@@ -28,6 +33,8 @@ const WINDOWS_NEWLINES = [
 	'valid/string/raw-multiline',
 ];
 
+// These files are somehow named incorrectly the "toml-test" repository.
+// Eventually someone should make a PR to fix them.
 const MISNAMED_FILES = new Map([
 	['invalid/inline-table/overwrite-1.toml', 'invalid/inline-table/overwrite-01.toml'],
 	['invalid/inline-table/overwrite-2.toml', 'invalid/inline-table/overwrite-02.toml'],
