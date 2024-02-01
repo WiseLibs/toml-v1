@@ -16,6 +16,18 @@ const EXPECT_FAILURE = [
 	'invalid/encoding/bad-utf8-in-string-literal', // We parse strings, not raw buffers
 ];
 
+const WINDOWS_NEWLINES = [
+	'valid/array/string-with-comma-2',
+	'valid/comment/tricky',
+	'valid/inline-table/multiline',
+	'valid/spec/string-1',
+	'valid/spec/string-6',
+	'valid/string/ends-in-whitespace-escape',
+	'valid/string/multiline',
+	'valid/string/multiline-quotes',
+	'valid/string/raw-multiline',
+];
+
 const MISNAMED_FILES = new Map([
 	['invalid/inline-table/overwrite-1.toml', 'invalid/inline-table/overwrite-01.toml'],
 	['invalid/inline-table/overwrite-2.toml', 'invalid/inline-table/overwrite-02.toml'],
@@ -42,7 +54,11 @@ describe('Official TOML test suite', function () {
 		let json;
 
 		if (testName.startsWith('valid/')) {
-			json = JSON.parse(normalizeLines(fs.readFileSync(completePath.slice(0, -5) + '.json', 'utf8')));
+			let jsonString = fs.readFileSync(completePath.slice(0, -5) + '.json', 'utf8');
+			if (EOL === '\r\n' && WINDOWS_NEWLINES.includes(testName)) {
+				jsonString = jsonString.replace(/\\n/g, '\\r\\n');
+			}
+			json = JSON.parse(jsonString);
 		} else if (!testName.startsWith('invalid/')) {
 			throw new TypeError('Unexpected test name');
 		}
@@ -103,9 +119,4 @@ function format(table) {
 		clone[key] = format(value);
 	}
 	return clone;
-}
-
-function normalizeLines(str) {
-	if (EOL === '\n') return str;
-	return str.replace(/\n/g, EOL);
 }
