@@ -1,5 +1,7 @@
 'use strict';
 const LOCAL_DATE_TIME = /^[0-9]{4}-[0-9]{2}-[0-9]{2}[Tt\x20][0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]+)?$/;
+const { printTimeString } = require('./local-time');
+const { printDateString } = require('./local-date');
 
 class LocalDateTime extends Date {
 	constructor(...args) {
@@ -24,9 +26,9 @@ class LocalDateTime extends Date {
 			throw new RangeError('LocalDateTime constructor only supports 1 parameter');
 		}
 	}
-	static parse() { throw new TypeError('Method not supported'); }
-	static UTC() { throw new TypeError('Method not supported'); }
-	static now() { throw new TypeError('Method not supported'); }
+	static parse() { throw methodNotSupported(); }
+	static UTC() { throw methodNotSupported(); }
+	static now() { throw methodNotSupported(); }
 	valueOf() { throw noTimezoneInformation(); }
 	getTime() { throw noTimezoneInformation(); }
 	setTime() { throw noTimezoneInformation(); }
@@ -63,24 +65,20 @@ class LocalDateTime extends Date {
 	// getDay() { return super.getDay(); }
 	getUTCDay() { throw noTimezoneInformation(); }
 	getTimezoneOffset() { throw noTimezoneInformation(); }
-	toString() { return super.toString().replace(/(:[0-9]{2}:[0-9]{2}).*/, '$1'); }
+	toString() {
+		if (Number.isNaN(super.valueOf())) return 'Invalid Date';
+		return `${super.toDateString()} ${printTimeString(this, true)}`;
+	}
 	toUTCString() { throw noTimezoneInformation(); }
 	toGMTString() { throw noTimezoneInformation(); }
 	toISOString() {
-		const date = new Date(super.valueOf() - super.getTimezoneOffset() * 60000);
-		const year = date.getUTCFullYear();
-		if (year < 0) {
-			throw new RangeError('Negative years are not supported');
-		}
-		if (year > 9999) {
-			throw new RangeError('Years beyond 9999 are not supported');
-		}
-		return date.toISOString().slice(0, -1);
+		if (Number.isNaN(super.valueOf())) throw new RangeError('Invalid time value');
+		return `${printDateString(this)}T${printTimeString(this)}`;
 	}
 	// toDateString() { return super.toDateString(); }
 	toTimeString() {
-		const str = super.toTimeString();
-		return Number.isNaN(super.valueOf()) ? str : str.slice(0, 8);
+		if (Number.isNaN(super.valueOf())) return 'Invalid Date';
+		return printTimeString(this, true);
 	}
 	// toLocaleDateString() { return super.toLocaleDateString(); }
 	// toLocaleTimeString() { return super.toLocaleTimeString(); }
@@ -102,6 +100,10 @@ function parseLocalDateTime(str) {
 	// The Date constructor interprets 2-digit years as relative to 1900.
 	if (year >= 0 && year <= 99) date.setFullYear(date.getFullYear() - 1900);
 	return date.valueOf();
+}
+
+function methodNotSupported() {
+	return new TypeError('Method not supported');
 }
 
 function noTimezoneInformation() {

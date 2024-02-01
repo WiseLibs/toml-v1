@@ -30,9 +30,9 @@ class LocalDate extends Date {
 		super.setMilliseconds(0);
 		super.setMinutes(safeOffset(super.getTimezoneOffset()));
 	}
-	static parse() { throw new TypeError('Method not supported'); }
-	static UTC() { throw new TypeError('Method not supported'); }
-	static now() { throw new TypeError('Method not supported'); }
+	static parse() { throw methodNotSupported(); }
+	static UTC() { throw methodNotSupported(); }
+	static now() { throw methodNotSupported(); }
 	valueOf() { throw noTimezoneInformation(); }
 	getTime() { throw noTimezoneInformation(); }
 	setTime() { throw noTimezoneInformation(); }
@@ -73,14 +73,8 @@ class LocalDate extends Date {
 	toUTCString() { throw noTimezoneInformation(); }
 	toGMTString() { throw noTimezoneInformation(); }
 	toISOString() {
-		const year = super.getUTCFullYear();
-		if (year < 0) {
-			throw new RangeError('Negative years are not supported');
-		}
-		if (year > 9999) {
-			throw new RangeError('Years beyond 9999 are not supported');
-		}
-		return super.toISOString().slice(0, -14);
+		if (Number.isNaN(super.valueOf())) throw new RangeError('Invalid time value');
+		return printDateString(this);
 	}
 	// toDateString() { return super.toDateString(); }
 	toTimeString() { throw noTimeInformation(); }
@@ -103,6 +97,16 @@ function parseLocalDate(str) {
 	return date.valueOf();
 }
 
+function printDateString(date) {
+	const year = date.getFullYear();
+	if (year < 0) throw new RangeError('Negative years are not supported');
+	if (year > 9999) throw new RangeError('Years beyond 9999 are not supported');
+	const strYear = year.toString().padStart(4, '0');
+	const strMonth = (date.getMonth() + 1).toString().padStart(2, '0');
+	const strDay = date.getDate().toString().padStart(2, '0');
+	return `${strYear}-${strMonth}-${strDay}`;
+}
+
 // When constructing a LocalDate from a number or Date, we interpret the UNIX
 // timestamp as representing a date *IN LOCAL TIME*. It would be intuitive to
 // normalize the LocalDate's time components to 0, but that would cause
@@ -116,6 +120,10 @@ function safeOffset(timezoneOffset) {
 	return Math.floor((1440 - timezoneOffset) / 2);
 }
 
+function methodNotSupported() {
+	return new TypeError('Method not supported');
+}
+
 function noTimeInformation() {
 	return new TypeError('No time information available');
 }
@@ -127,4 +135,5 @@ function noTimezoneInformation() {
 Object.assign(exports, {
 	LocalDate,
 	parseLocalDate,
+	printDateString,
 });

@@ -27,9 +27,9 @@ class OffsetDateTime extends Date {
 		}
 		Object.defineProperty(this, OFFSET, { value: offset, writable: true });
 	}
-	static parse() { throw new TypeError('Method not supported'); }
-	static UTC() { throw new TypeError('Method not supported'); }
-	static now() { throw new TypeError('Method not supported'); }
+	static parse() { throw methodNotSupported(); }
+	static UTC() { throw methodNotSupported(); }
+	static now() { throw methodNotSupported(); }
 	getOriginalTimezoneOffset() { return this[OFFSET]; }
 	setOriginalTimezoneOffset(offset) {
 		if (!Number.isInteger(offset)) {
@@ -44,22 +44,14 @@ class OffsetDateTime extends Date {
 		const offset = this[OFFSET];
 		if (offset === 0) {
 			const year = super.getUTCFullYear();
-			if (year < 0) {
-				throw new RangeError('Negative years are not supported');
-			}
-			if (year > 9999) {
-				throw new RangeError('Years beyond 9999 are not supported');
-			}
+			if (year < 0) throw new RangeError('Negative years are not supported');
+			if (year > 9999) throw new RangeError('Years beyond 9999 are not supported');
 			return super.toISOString();
 		} else {
 			const date = new Date(super.valueOf() - offset * 60000);
 			const year = date.getUTCFullYear();
-			if (year < 0) {
-				throw new RangeError('Negative years are not supported');
-			}
-			if (year > 9999) {
-				throw new RangeError('Years beyond 9999 are not supported');
-			}
+			if (year < 0) throw new RangeError('Negative years are not supported');
+			if (year > 9999) throw new RangeError('Years beyond 9999 are not supported');
 			const sign = offset > 0 ? '-' : '+';
 			const offsetAbs = Math.abs(offset);
 			const offsetHours = Math.trunc(offsetAbs / 60);
@@ -95,6 +87,10 @@ function parseOffsetDateTime(str) {
 	// The Date constructor interprets 2-digit years as relative to 1900.
 	if (year >= 0 && year <= 99) date.setUTCFullYear(date.getUTCFullYear() - 1900);
 	return { value: date.valueOf(), offset };
+}
+
+function methodNotSupported() {
+	return new TypeError('Method not supported');
 }
 
 Object.assign(exports, {

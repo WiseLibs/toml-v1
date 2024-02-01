@@ -199,12 +199,12 @@ describe('LocalDate', function () {
 				.to.equal(new Date(1999, 2, 24, 21, 18, 0, 42).toLocaleDateString());
 		});
 		specify('toJSON()', function () {
-			expect(() => new LocalDate(NaN).toISOString()).to.throw(RangeError);
-			expect(() => new LocalDate(new Date(-1000, 0)).toISOString()).to.throw(RangeError);
-			expect(() => new LocalDate(new Date(10000, 0)).toISOString()).to.throw(RangeError);
-			expect(new LocalDate('0099-03-24').toISOString()).to.equal('0099-03-24');
-			expect(new LocalDate('1999-03-24').toISOString()).to.equal('1999-03-24');
-			expect(new LocalDate(new Date(1999, 2, 24, 23, 59, 59, 999)).toISOString()).to.equal('1999-03-24');
+			expect(() => new LocalDate(NaN).toJSON()).to.throw(RangeError);
+			expect(() => new LocalDate(new Date(-1000, 0)).toJSON()).to.throw(RangeError);
+			expect(() => new LocalDate(new Date(10000, 0)).toJSON()).to.throw(RangeError);
+			expect(new LocalDate('0099-03-24').toJSON()).to.equal('0099-03-24');
+			expect(new LocalDate('1999-03-24').toJSON()).to.equal('1999-03-24');
+			expect(new LocalDate(new Date(1999, 2, 24, 23, 59, 59, 999)).toJSON()).to.equal('1999-03-24');
 		});
 	});
 	it('normalizes out-of-bounds dates in the constructor', function () {

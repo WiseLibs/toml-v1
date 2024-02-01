@@ -33,9 +33,9 @@ class LocalTime extends Date {
 			this[NORMALIZE]();
 		}
 	}
-	static parse() { throw new TypeError('Method not supported'); }
-	static UTC() { throw new TypeError('Method not supported'); }
-	static now() { throw new TypeError('Method not supported'); }
+	static parse() { throw methodNotSupported(); }
+	static UTC() { throw methodNotSupported(); }
+	static now() { throw methodNotSupported(); }
 	[NORMALIZE]() {
 		const value = super.valueOf();
 		return super.setTime(value % 86400000 + (value < 0 ? 86400000 : 0));
@@ -77,19 +77,14 @@ class LocalTime extends Date {
 	getUTCDay() { throw noDateInformation(); }
 	getTimezoneOffset() { throw noTimezoneInformation(); }
 	toString() {
-		const str = super.toTimeString();
-		return Number.isNaN(super.valueOf()) ? str : str.slice(0, 8);
+		if (Number.isNaN(super.valueOf())) return 'Invalid Date';
+		return printTimeString(this, true);
 	}
 	toUTCString() { throw noTimezoneInformation(); }
 	toGMTString() { throw noTimezoneInformation(); }
 	toISOString() {
-		if (Number.isNaN(super.valueOf())) {
-			throw new RangeError('Invalid time value');
-		}
-		const str = super.toTimeString().slice(0, 8);
-		const milliseconds = super.getMilliseconds();
-		if (milliseconds === 0) return str;
-		return `${str}.${milliseconds.toString().padStart(3, '0')}`;
+		if (Number.isNaN(super.valueOf())) throw new RangeError('Invalid time value');
+		return printTimeString(this);
 	}
 	toDateString() { throw noDateInformation(); }
 	toTimeString() { return this.toString(); }
@@ -107,6 +102,24 @@ function parseLocalTime(str) {
 	return milliseconds + seconds * 1000 + minutes * 60000 + hours * 3600000;
 }
 
+function printTimeString(date, ignoreMilliseconds = false) {
+	const strHours = date.getHours().toString().padStart(2, '0');
+	const strMinutes = date.getMinutes().toString().padStart(2, '0');
+	const strSeconds = date.getSeconds().toString().padStart(2, '0');
+	if (!ignoreMilliseconds) {
+		const milliseconds = date.getMilliseconds();
+		if (milliseconds !== 0) {
+			const strMilliseconds = milliseconds.toString().padStart(3, '0');
+			return `${strHours}:${strMinutes}:${strSeconds}.${strMilliseconds}`;
+		}
+	}
+	return `${strHours}:${strMinutes}:${strSeconds}`;
+}
+
+function methodNotSupported() {
+	return new TypeError('Method not supported');
+}
+
 function noDateInformation() {
 	return new TypeError('No date information available');
 }
@@ -118,4 +131,5 @@ function noTimezoneInformation() {
 Object.assign(exports, {
 	LocalTime,
 	parseLocalTime,
+	printTimeString,
 });
