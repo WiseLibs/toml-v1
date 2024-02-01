@@ -14,7 +14,7 @@ class LocalTime extends Date {
 					value = Number(new Date(value));
 				} else if (typeof value === 'string') {
 					if (!LOCAL_TIME.test(value)) {
-						throw new Error('LocalTime string is invalid');
+						throw new Error('LocalTime string format is invalid');
 					}
 					value = parseLocalTime(value);
 				} else {
@@ -33,13 +33,16 @@ class LocalTime extends Date {
 			this[NORMALIZE]();
 		}
 	}
+
 	static parse() { throw methodNotSupported(); }
 	static UTC() { throw methodNotSupported(); }
 	static now() { throw methodNotSupported(); }
+
 	[NORMALIZE]() {
 		const value = super.valueOf();
 		return super.setTime(value % 86400000 + (value < 0 ? 86400000 : 0));
 	}
+
 	// valueOf() { return super.valueOf(); }
 	getTime() { throw noTimezoneInformation(); }
 	setTime() { throw noTimezoneInformation(); }

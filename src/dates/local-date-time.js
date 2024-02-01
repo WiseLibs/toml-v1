@@ -14,7 +14,7 @@ class LocalDateTime extends Date {
 					value = Number(new Date(value));
 				} else if (typeof value === 'string') {
 					if (!LOCAL_DATE_TIME.test(value)) {
-						throw new Error('LocalDateTime string is invalid');
+						throw new Error('LocalDateTime string format is invalid');
 					}
 					value = parseLocalDateTime(value);
 				} else {
@@ -26,9 +26,11 @@ class LocalDateTime extends Date {
 			throw new RangeError('LocalDateTime constructor only supports 1 parameter');
 		}
 	}
+
 	static parse() { throw methodNotSupported(); }
 	static UTC() { throw methodNotSupported(); }
 	static now() { throw methodNotSupported(); }
+
 	// valueOf() { return super.valueOf(); }
 	getTime() { throw noTimezoneInformation(); }
 	setTime() { throw noTimezoneInformation(); }

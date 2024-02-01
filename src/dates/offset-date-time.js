@@ -16,7 +16,7 @@ class OffsetDateTime extends Date {
 					value = Number(new Date(value));
 				} else if (typeof value === 'string') {
 					if (!OFFSET_DATE_TIME.test(value)) {
-						throw new Error('OffsetDateTime string is invalid');
+						throw new Error('OffsetDateTime string format is invalid');
 					}
 					({ value, offset } = parseOffsetDateTime(value));
 				} else {
@@ -27,18 +27,26 @@ class OffsetDateTime extends Date {
 		} else {
 			throw new RangeError('OffsetDateTime constructor only supports 1 parameter');
 		}
-		Object.defineProperty(this, OFFSET, { value: offset, writable: true });
+
+		Object.defineProperty(this, OFFSET, {
+			value: offset,
+			writable: true,
+		});
 	}
+
 	static parse() { throw methodNotSupported(); }
 	static UTC() { throw methodNotSupported(); }
 	static now() { throw methodNotSupported(); }
-	getOriginalTimezoneOffset() { return this[OFFSET]; }
+
+	getOriginalTimezoneOffset() {
+		return this[OFFSET];
+	}
 	setOriginalTimezoneOffset(offset) {
 		if (!Number.isInteger(offset)) {
 			throw new TypeError('Expected offset to be an integer');
 		}
 		if (offset < -6039 || offset > 6039) {
-			throw new RangeError('Offset out of bounds');
+			throw new RangeError('Offset value out of bounds');
 		}
 		this[OFFSET] = offset;
 	}
@@ -63,7 +71,9 @@ class OffsetDateTime extends Date {
 			return `${date.toISOString().slice(0, -1)}${sign}${offsetHoursString}:${offsetMinutesString}`;
 		}
 	}
-	toJSON() { return this.toISOString(); }
+	toJSON() {
+		return this.toISOString();
+	}
 }
 
 function parseOffsetDateTime(str) {

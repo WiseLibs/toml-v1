@@ -14,7 +14,7 @@ class LocalDate extends Date {
 					value = Number(new Date(value));
 				} else if (typeof value === 'string') {
 					if (!LOCAL_DATE.test(value)) {
-						throw new Error('LocalDate string is invalid');
+						throw new Error('LocalDate string format is invalid');
 					}
 					value = parseLocalDate(value);
 				} else {
@@ -32,9 +32,11 @@ class LocalDate extends Date {
 		super.setMilliseconds(0);
 		super.setMinutes(safeOffset(super.getTimezoneOffset()));
 	}
+
 	static parse() { throw methodNotSupported(); }
 	static UTC() { throw methodNotSupported(); }
 	static now() { throw methodNotSupported(); }
+
 	// valueOf() { return super.valueOf(); }
 	getTime() { throw noTimezoneInformation(); }
 	setTime() { throw noTimezoneInformation(); }
