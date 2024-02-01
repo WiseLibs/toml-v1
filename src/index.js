@@ -2,7 +2,7 @@
 const { File } = require('super-sources');
 const { LocalTime } = require('./dates/local-time');
 const { LocalDate } = require('./dates/local-date');
-const { LocalDateTime } = require('./dates/locale-date-time');
+const { LocalDateTime } = require('./dates/local-date-time');
 const { OffsetDateTime } = require('./dates/offset-date-time');
 const { SourceTracker } = require('./source-tracker');
 const parseAST = require('./parse');

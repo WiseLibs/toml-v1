@@ -1,11 +1,6 @@
 'use strict';
 const LOCAL_DATE = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
-const VALIDATE = Symbol();
-const NORMALIZE = Symbol();
-const DATE = new Date();
 
-// TODO: maybe prevent valueOf/getTime/setTime/getTimezoneOffset and UTC/GMT/ISO methods
-// TODO: maybe allow date to be invalid, and just handle the case in string methods
 class LocalDate extends Date {
 	constructor(...args) {
 		if (args.length === 0) {
@@ -14,7 +9,7 @@ class LocalDate extends Date {
 			let value = args[0];
 			if (typeof value !== 'number') {
 				if (value instanceof Date) {
-					value = +value.valueOf();
+					value = Number(new Date(value));
 				} else if (typeof value === 'string') {
 					if (!LOCAL_DATE.test(value)) {
 						throw new Error('LocalDate string is invalid');
@@ -28,40 +23,19 @@ class LocalDate extends Date {
 		} else {
 			throw new RangeError('LocalDate constructor only supports 1 parameter');
 		}
-		this[NORMALIZE](0);
+
+		super.setHours(0);
+		super.setMinutes(0);
+		super.setSeconds(0);
+		super.setMilliseconds(0);
+		super.setMinutes(safeOffset(super.getTimezoneOffset()));
 	}
-	static parse(str) {
-		if (typeof str !== 'string') {
-			throw new TypeError('Expected argument to be a string');
-		}
-		return new LocalDate(str);
-	}
-	static UTC() {
-		throw new TypeError('Method not supported');
-	}
-	static now() {
-		throw new TypeError('Method not supported');
-	}
-	[VALIDATE](prevValue) {
-		const value = super.valueOf();
-		if (!Number.isFinite(value)) {
-			super.setTime(prevValue);
-			throw new Error('Date/time value is invalid');
-		}
-		return value;
-	}
-	[NORMALIZE](prevValue) {
-		this[VALIDATE](prevValue);
-		const timezoneOffset = super.getTimezoneOffset();
-		const delta = super.getDate() !== super.getUTCDate() ? -Math.sign(timezoneOffset) : 0;
-		super.setUTCHours(0);
-		super.setUTCMinutes(safeOffset(timezoneOffset));
-		super.setUTCSeconds(0);
-		super.setUTCMilliseconds(0);
-		return super.setUTCDate(super.getUTCDate() + delta);
-	}
-	// getTime() { return super.getTime(); }
-	setTime(x) { const v = super.valueOf(); super.setTime(x); return this[NORMALIZE](v); }
+	static parse() { throw new TypeError('Method not supported'); }
+	static UTC() { throw new TypeError('Method not supported'); }
+	static now() { throw new TypeError('Method not supported'); }
+	valueOf() { throw noTimezoneInformation(); }
+	getTime() { throw noTimezoneInformation(); }
+	setTime() { throw noTimezoneInformation(); }
 	getMilliseconds() { throw noTimeInformation(); }
 	setMilliseconds() { throw noTimeInformation(); }
 	getUTCMilliseconds() { throw noTimeInformation(); }
@@ -79,26 +53,35 @@ class LocalDate extends Date {
 	getUTCHours() { throw noTimeInformation(); }
 	setUTCHours() { throw noTimeInformation(); }
 	// getDate() { return super.getDate(); }
-	setDate(x) { const v = super.valueOf(); super.setDate(x); return this[VALIDATE](v); }
-	// getUTCDate() { return super.getUTCDate(); }
-	setUTCDate(x) { const v = super.valueOf(); super.setUTCDate(x); return this[VALIDATE](v); }
+	// setDate(x) { return super.setDate(x); }
+	getUTCDate() { throw noTimezoneInformation(); }
+	setUTCDate() { throw noTimezoneInformation(); }
 	// getMonth() { return super.getMonth(); }
-	setMonth(x) { const v = super.valueOf(); super.setMonth(x); return this[VALIDATE](v); }
-	// getUTCMonth() { return super.getUTCMonth(); }
-	setUTCMonth(x) { const v = super.valueOf(); super.setUTCMonth(x); return this[VALIDATE](v); }
+	// setMonth(x) { return super.setMonth(x); }
+	getUTCMonth() { throw noTimezoneInformation(); }
+	setUTCMonth() { throw noTimezoneInformation(); }
 	// getYear() { return super.getYear(); }
-	setYear(x) { const v = super.valueOf(); super.setYear(x); return this[VALIDATE](v); }
+	// setYear(x) { return super.setYear(x); }
 	// getFullYear() { return super.getFullYear(); }
-	setFullYear(x) { const v = super.valueOf(); super.setFullYear(x); return this[VALIDATE](v); }
-	// getUTCFullYear() { return super.getUTCFullYear(); }
-	setUTCFullYear(x) { const v = super.valueOf(); super.setUTCFullYear(x); return this[VALIDATE](v); }
+	// setFullYear(x) { return super.setFullYear(x); }
+	getUTCFullYear() { throw noTimezoneInformation(); }
+	setUTCFullYear() { throw noTimezoneInformation(); }
 	// getDay() { return super.getDay(); }
-	// getUTCDay() { return super.getUTCDay(); }
-	// getTimezoneOffset() { return super.getTimezoneOffset(); }
+	getUTCDay() { throw noTimezoneInformation(); }
+	getTimezoneOffset() { throw noTimezoneInformation(); }
 	toString() { return super.toDateString(); }
-	toUTCString() { return super.toUTCString().slice(0, -13); }
-	toGMTString() { return this.toUTCString(); }
-	toISOString() { return super.toISOString().slice(0, -14); }
+	toUTCString() { throw noTimezoneInformation(); }
+	toGMTString() { throw noTimezoneInformation(); }
+	toISOString() {
+		const year = super.getUTCFullYear();
+		if (year < 0) {
+			throw new RangeError('Negative years are not supported');
+		}
+		if (year > 9999) {
+			throw new RangeError('Years beyond 9999 are not supported');
+		}
+		return super.toISOString().slice(0, -14);
+	}
 	// toDateString() { return super.toDateString(); }
 	toTimeString() { throw noTimeInformation(); }
 	// toLocaleDateString() { return super.toLocaleDateString(); }
@@ -113,24 +96,32 @@ function parseLocalDate(str) {
 	const day = Number.parseInt(str.slice(8, 10), 10);
 	if (month < 1) throw new RangeError('Month value cannot be 0');
 	if (day < 1) throw new RangeError('Day value cannot be 0');
-	const timezoneOffset = DATE.getTimezoneOffset();
-	const date = new Date(year, month - 1, day, 0, safeOffset(timezoneOffset) - timezoneOffset);
+	const date = new Date(year, month - 1, day, 0, 0, 0, 0);
 	// The Date constructor interprets 2-digit years as relative to 1900.
-	if (year >= 0 && year <= 99) date.setUTCFullYear(date.getUTCFullYear() - 1900);
+	if (year >= 0 && year <= 99) date.setFullYear(date.getFullYear() - 1900);
+	date.setMinutes(safeOffset(date.getTimezoneOffset()));
 	return date.valueOf();
 }
 
-// LocalDate contains no time information, so timezones become meaningless.
-// Therefore, there should be no difference between UTC-prefixed methods and
-// regular methods. To ensure this, we set the LocalDate's underlying time value
-// to a safe time in the middle of the day, based on the timezone. Note that
-// using 12:00 is not sufficient, because some timezones have 14-hour offsets.
+// When constructing a LocalDate from a number or Date, we interpret the UNIX
+// timestamp as representing a date *IN LOCAL TIME*. It would be intuitive to
+// normalize the LocalDate's time components to 0, but that would cause
+// expressions like "new LocalDate(new LocalDate())" to yield inconsistent
+// results for timezones that are east of GMT. Therefore, we normalize the
+// internal time components to a safe time in the middle of the day, based on
+// the timezone. Note that using 12:00 is not sufficient, because some timezones
+// have 14-hour offsets. This offset also allows us to use "super.toISOString()"
+// to get the local date, without worrying about the timezone.
 function safeOffset(timezoneOffset) {
-	return Math.floor((1440 - timezoneOffset) / 2 + timezoneOffset);
+	return Math.floor((1440 - timezoneOffset) / 2);
 }
 
 function noTimeInformation() {
 	return new TypeError('No time information available');
+}
+
+function noTimezoneInformation() {
+	return new TypeError('No timezone information available');
 }
 
 Object.assign(exports, {

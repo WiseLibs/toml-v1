@@ -1,9 +1,6 @@
 'use strict';
 const LOCAL_DATE_TIME = /^[0-9]{4}-[0-9]{2}-[0-9]{2}[Tt\x20][0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]+)?$/;
-const VALIDATE = Symbol();
 
-// TODO: maybe prevent valueOf/getTime/setTime/getTimezoneOffset and UTC/GMT/ISO methods
-// TODO: maybe allow date to be invalid, and just handle the case in string methods
 class LocalDateTime extends Date {
 	constructor(...args) {
 		if (args.length === 0) {
@@ -12,7 +9,7 @@ class LocalDateTime extends Date {
 			let value = args[0];
 			if (typeof value !== 'number') {
 				if (value instanceof Date) {
-					value = +value.valueOf();
+					value = Number(new Date(value));
 				} else if (typeof value === 'string') {
 					if (!LOCAL_DATE_TIME.test(value)) {
 						throw new Error('LocalDateTime string is invalid');
@@ -26,73 +23,69 @@ class LocalDateTime extends Date {
 		} else {
 			throw new RangeError('LocalDateTime constructor only supports 1 parameter');
 		}
-		this[VALIDATE](0);
 	}
-	static parse(str) {
-		if (typeof str !== 'string') {
-			throw new TypeError('Expected argument to be a string');
-		}
-		return new LocalDateTime(str);
-	}
-	static UTC() {
-		throw new TypeError('Method not supported');
-	}
-	static now() {
-		throw new TypeError('Method not supported');
-	}
-	[VALIDATE](prevValue) {
-		const value = super.valueOf();
-		if (!Number.isFinite(value)) {
-			super.setTime(prevValue);
-			throw new Error('Date/time value is invalid');
-		}
-		return value;
-	}
-	// getTime() { return super.getTime(); }
-	setTime(x) { const v = super.valueOf(); super.setTime(x); return this[VALIDATE](v); }
+	static parse() { throw new TypeError('Method not supported'); }
+	static UTC() { throw new TypeError('Method not supported'); }
+	static now() { throw new TypeError('Method not supported'); }
+	valueOf() { throw noTimezoneInformation(); }
+	getTime() { throw noTimezoneInformation(); }
+	setTime() { throw noTimezoneInformation(); }
 	// getMilliseconds() { return super.getMilliseconds(); }
-	setMilliseconds(x) { const v = super.valueOf(); super.setMilliseconds(x); return this[VALIDATE](v); }
-	// getUTCMilliseconds() { return super.getUTCMilliseconds(); }
-	setUTCMilliseconds(x) { const v = super.valueOf(); super.setUTCMilliseconds(x); return this[VALIDATE](v); }
+	// setMilliseconds(x) { return super.setMilliseconds(x); }
+	getUTCMilliseconds() { throw noTimezoneInformation(); }
+	setUTCMilliseconds() { throw noTimezoneInformation(); }
 	// getSeconds() { return super.getSeconds(); }
-	setSeconds(x) { const v = super.valueOf(); super.setSeconds(x); return this[VALIDATE](v); }
-	// getUTCSeconds() { return super.getUTCSeconds(); }
-	setUTCSeconds(x) { const v = super.valueOf(); super.setUTCSeconds(x); return this[VALIDATE](v); }
+	// setSeconds(x) { return super.setSeconds(x); }
+	getUTCSeconds() { throw noTimezoneInformation(); }
+	setUTCSeconds() { throw noTimezoneInformation(); }
 	// getMinutes() { return super.getMinutes(); }
-	setMinutes(x) { const v = super.valueOf(); super.setMinutes(x); return this[VALIDATE](v); }
-	// getUTCMinutes() { return super.getUTCMinutes(); }
-	setUTCMinutes(x) { const v = super.valueOf(); super.setUTCMinutes(x); return this[VALIDATE](v); }
+	// setMinutes(x) { return super.setMinutes(x); }
+	getUTCMinutes() { throw noTimezoneInformation(); }
+	setUTCMinutes() { throw noTimezoneInformation(); }
 	// getHours() { return super.getHours(); }
-	setHours(x) { const v = super.valueOf(); super.setHours(x); return this[VALIDATE](v); }
-	// getUTCHours() { return super.getUTCHours(); }
-	setUTCHours(x) { const v = super.valueOf(); super.setUTCHours(x); return this[VALIDATE](v); }
+	// setHours(x) { return super.setHours(x); }
+	getUTCHours() { throw noTimezoneInformation(); }
+	setUTCHours() { throw noTimezoneInformation(); }
 	// getDate() { return super.getDate(); }
-	setDate(x) { const v = super.valueOf(); super.setDate(x); return this[VALIDATE](v); }
-	// getUTCDate() { return super.getUTCDate(); }
-	setUTCDate(x) { const v = super.valueOf(); super.setUTCDate(x); return this[VALIDATE](v); }
+	// setDate(x) { return super.setDate(x); }
+	getUTCDate() { throw noTimezoneInformation(); }
+	setUTCDate() { throw noTimezoneInformation(); }
 	// getMonth() { return super.getMonth(); }
-	setMonth(x) { const v = super.valueOf(); super.setMonth(x); return this[VALIDATE](v); }
-	// getUTCMonth() { return super.getUTCMonth(); }
-	setUTCMonth(x) { const v = super.valueOf(); super.setUTCMonth(x); return this[VALIDATE](v); }
+	// setMonth(x) { return super.setMonth(x); }
+	getUTCMonth() { throw noTimezoneInformation(); }
+	setUTCMonth() { throw noTimezoneInformation(); }
 	// getYear() { return super.getYear(); }
-	setYear(x) { const v = super.valueOf(); super.setYear(x); return this[VALIDATE](v); }
+	// setYear(x) { return super.setYear(x); }
 	// getFullYear() { return super.getFullYear(); }
-	setFullYear(x) { const v = super.valueOf(); super.setFullYear(x); return this[VALIDATE](v); }
-	// getUTCFullYear() { return super.getUTCFullYear(); }
-	setUTCFullYear(x) { const v = super.valueOf(); super.setUTCFullYear(x); return this[VALIDATE](v); }
+	// setFullYear(x) { return super.setFullYear(x); }
+	getUTCFullYear() { throw noTimezoneInformation(); }
+	setUTCFullYear() { throw noTimezoneInformation(); }
 	// getDay() { return super.getDay(); }
-	// getUTCDay() { return super.getUTCDay(); }
-	// getTimezoneOffset() { return super.getTimezoneOffset(); }
+	getUTCDay() { throw noTimezoneInformation(); }
+	getTimezoneOffset() { throw noTimezoneInformation(); }
 	toString() { return super.toString().replace(/(:[0-9]{2}:[0-9]{2}).*/, '$1'); }
-	// toUTCString() { return super.toUTCString(); }
-	// toGMTString() { return super.toGMTString(); }
-	// toISOString() { return super.toISOString(); }
+	toUTCString() { throw noTimezoneInformation(); }
+	toGMTString() { throw noTimezoneInformation(); }
+	toISOString() {
+		const date = new Date(super.valueOf() - super.getTimezoneOffset() * 60000);
+		const year = date.getUTCFullYear();
+		if (year < 0) {
+			throw new RangeError('Negative years are not supported');
+		}
+		if (year > 9999) {
+			throw new RangeError('Years beyond 9999 are not supported');
+		}
+		return date.toISOString().slice(0, -1);
+	}
 	// toDateString() { return super.toDateString(); }
-	toTimeString() { return super.toTimeString().slice(0, 8); }
+	toTimeString() {
+		const str = super.toTimeString();
+		return Number.isNaN(super.valueOf()) ? str : str.slice(0, 8);
+	}
 	// toLocaleDateString() { return super.toLocaleDateString(); }
 	// toLocaleTimeString() { return super.toLocaleTimeString(); }
 	// toLocaleString() { return super.toLocaleString(); }
-	// toJSON() { return super.toJSON(); }
+	toJSON() { return this.toISOString(); }
 }
 
 function parseLocalDateTime(str) {
@@ -107,8 +100,12 @@ function parseLocalDateTime(str) {
 	const milliseconds = str.length > 19 ? Math.trunc(Number.parseFloat(str.slice(19), 10) * 1000) : 0;
 	const date = new Date(year, month - 1, day, hours, minutes, seconds, milliseconds);
 	// The Date constructor interprets 2-digit years as relative to 1900.
-	if (year >= 0 && year <= 99) date.setUTCFullYear(date.getUTCFullYear() - 1900);
+	if (year >= 0 && year <= 99) date.setFullYear(date.getFullYear() - 1900);
 	return date.valueOf();
+}
+
+function noTimezoneInformation() {
+	return new TypeError('No timezone information available');
 }
 
 Object.assign(exports, {

@@ -2,8 +2,8 @@
 const { EOL } = require('os');
 const { LocalTime, parseLocalTime } = require('./dates/local-time');
 const { LocalDate, parseLocalDate } = require('./dates/local-date');
-const { LocalDateTime, parseLocalDateTime } = require('./dates/locale-date-time');
-const { OffsetDateTime, parseOffsetDateTime } = require('./dates/offset-date-time');
+const { LocalDateTime, parseLocalDateTime } = require('./dates/local-date-time');
+const { OffsetDateTime, parseOffsetDateTime, OFFSET } = require('./dates/offset-date-time');
 const Parser = require('./parser');
 const ast = require('./ast');
 
@@ -298,26 +298,28 @@ function specialFloatLiteral(parser) {
 function dateLiteral(parser) {
 	const date = parser.getCaptured();
 	if (!parser.accept(/[Tt\x20]/y)) {
-		const value = new LocalDate(safeParse(parseLocalDate, date));
-		return new ast.LocalDateNode(date, value);
+		const value = safeParse(parseLocalDate, date);
+		return new ast.LocalDateNode(date, new LocalDate(value));
 	}
 
 	const time = parser.expect(TIME);
 	if (parser.accept(/[Zz]|[+-][0-9]{2}:[0-9]{2}/y)) {
 		const source = date.to(parser.getCaptured());
-		const value = new OffsetDateTime(safeParse(parseOffsetDateTime, source));
-		return new ast.OffsetDateTimeNode(source, value);
+		const { value, offset } = safeParse(parseOffsetDateTime, source);
+		const date = new OffsetDateTime(value);
+		date[OFFSET] = offset;
+		return new ast.OffsetDateTimeNode(source, date);
 	} else {
 		const source = date.to(time);
-		const value = new LocalDateTimeNode(safeParse(parseLocalDateTime, source));
-		return new ast.LocalDateTimeNode(source, value);
+		const value = safeParse(parseLocalDateTime, source);
+		return new ast.LocalDateTimeNode(source, new LocalDateTimeNode(value));
 	}
 }
 
 function timeLiteral(parser) {
 	const time = parser.getCaptured();
-	const value = new LocalTime(safeParse(parseLocalTime, time));
-	return new ast.LocalTimeNode(time, value);
+	const value = safeParse(parseLocalTime, time);
+	return new ast.LocalTimeNode(time, new LocalTime(value));
 }
 
 function safeParse(fn, source) {
