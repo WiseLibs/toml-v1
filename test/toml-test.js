@@ -107,6 +107,5 @@ function format(table) {
 
 function normalizeLines(str) {
 	if (EOL === '\n') return str;
-	if (EOL === '\r\n') return str.replace(/\\n/g, '\\r\\n');
-	throw new TypeError('Unexpected EOL');
+	return str.replace(/\n/g, EOL);
 }
