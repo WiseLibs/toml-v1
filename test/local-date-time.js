@@ -17,7 +17,6 @@ describe('LocalDateTime', function () {
 	});
 	it('does not support timezone-related methods', function () {
 		const localDateTime = new LocalDateTime();
-		expect(() => localDateTime.valueOf()).to.throw(TypeError);
 		expect(() => localDateTime.getTime()).to.throw(TypeError);
 		expect(() => localDateTime.setTime(1)).to.throw(TypeError);
 		expect(() => localDateTime.getUTCMilliseconds()).to.throw(TypeError);
@@ -117,6 +116,9 @@ describe('LocalDateTime', function () {
 		});
 	});
 	describe('supported methods', function () {
+		specify('valueOf()', function () {
+			expect(new LocalDateTime('1999-03-24T21:18:00').valueOf()).to.equal(new Date('1999-03-24T21:18:00').valueOf());
+		});
 		specify('getMilliseconds()', function () {
 			expect(new LocalDateTime('1999-03-24T21:18:00').getMilliseconds()).to.equal(0);
 			expect(new LocalDateTime('1999-03-24T21:18:00.042').getMilliseconds()).to.equal(42);

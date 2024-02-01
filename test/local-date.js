@@ -38,7 +38,6 @@ describe('LocalDate', function () {
 	});
 	it('does not support timezone-related methods', function () {
 		const localDate = new LocalDate();
-		expect(() => localDate.valueOf()).to.throw(TypeError);
 		expect(() => localDate.getTime()).to.throw(TypeError);
 		expect(() => localDate.setTime(1)).to.throw(TypeError);
 		expect(() => localDate.getUTCDate()).to.throw(TypeError);
@@ -76,6 +75,7 @@ describe('LocalDate', function () {
 			const localDate = new LocalDate('1999-03-24');
 			expectWithinDate(new Date(localDate).valueOf(), date1);
 			expectWithinDate(new Date(localDate).valueOf(), date2);
+			expect(() => new LocalDate('2024-02-29')).to.not.throw();
 		});
 		it('does not support invalid date strings', function () {
 			expect(() => new LocalDate('1999-03-24Z')).to.throw(Error);
@@ -91,6 +91,12 @@ describe('LocalDate', function () {
 			expect(() => new LocalDate('1999-03-24T19:03:23Z')).to.throw(Error);
 			expect(() => new LocalDate('1999-03-24T19:03:23.042')).to.throw(Error);
 			expect(() => new LocalDate('1999-03-24T19:03:23.042Z')).to.throw(Error);
+			expect(() => new LocalDate('1999-00-24')).to.throw(Error);
+			expect(() => new LocalDate('1999-01-00')).to.throw(Error);
+			expect(() => new LocalDate('1999-13-01')).to.throw(Error);
+			expect(() => new LocalDate('1999-12-32')).to.throw(Error);
+			expect(() => new LocalDate('1999-02-29')).to.throw(Error);
+			expect(() => new LocalDate('2100-02-29')).to.throw(Error);
 		});
 		it('does not support other argument types', function () {
 			expect(() => new LocalDate(undefined)).to.throw(TypeError);
@@ -109,6 +115,9 @@ describe('LocalDate', function () {
 		});
 	});
 	describe('supported methods', function () {
+		specify('valueOf()', function () {
+			expectWithinDate(new LocalDate('1999-03-24').valueOf(), new Date(1999, 2, 24));
+		});
 		specify('getDate()', function () {
 			expect(new LocalDate('1999-03-04').getDate()).to.equal(4);
 			expect(new LocalDate('1999-03-24').getDate()).to.equal(24);
@@ -206,9 +215,6 @@ describe('LocalDate', function () {
 			expect(new LocalDate('1999-03-24').toJSON()).to.equal('1999-03-24');
 			expect(new LocalDate(new Date(1999, 2, 24, 23, 59, 59, 999)).toJSON()).to.equal('1999-03-24');
 		});
-	});
-	it('normalizes out-of-bounds dates in the constructor', function () {
-		expectWithinDate(new Date(new LocalDate('1999-99-99')).valueOf(), new Date(1999, 98, 99));
 	});
 	it('maintains an internal offset to ensure consistent time interpretation', function () {
 		const localDate1 = new LocalDate(new Date(1999, 2, 24, 0, 0, 0, 0));

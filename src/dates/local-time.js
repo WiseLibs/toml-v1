@@ -40,7 +40,7 @@ class LocalTime extends Date {
 		const value = super.valueOf();
 		return super.setTime(value % 86400000 + (value < 0 ? 86400000 : 0));
 	}
-	valueOf() { throw noTimezoneInformation(); }
+	// valueOf() { return super.valueOf(); }
 	getTime() { throw noTimezoneInformation(); }
 	setTime() { throw noTimezoneInformation(); }
 	// getMilliseconds() { return super.getMilliseconds(); }
@@ -94,14 +94,6 @@ class LocalTime extends Date {
 	toJSON() { return this.toISOString(); }
 }
 
-function parseLocalTime(str) {
-	const hours = Number.parseInt(str.slice(0, 2), 10);
-	const minutes = Number.parseInt(str.slice(3, 5), 10) + DATE.getTimezoneOffset();
-	const seconds = Number.parseInt(str.slice(6, 8), 10);
-	const milliseconds = str.length > 8 ? Math.trunc(Number.parseFloat(str.slice(8), 10) * 1000) : 0;
-	return milliseconds + seconds * 1000 + minutes * 60000 + hours * 3600000;
-}
-
 function printTimeString(date, ignoreMilliseconds = false) {
 	const strHours = date.getHours().toString().padStart(2, '0');
 	const strMinutes = date.getMinutes().toString().padStart(2, '0');
@@ -114,6 +106,23 @@ function printTimeString(date, ignoreMilliseconds = false) {
 		}
 	}
 	return `${strHours}:${strMinutes}:${strSeconds}`;
+}
+
+function parseTimeString(str) {
+	const hours = Number.parseInt(str.slice(0, 2), 10);
+	const minutes = Number.parseInt(str.slice(3, 5), 10);
+	const seconds = Number.parseInt(str.slice(6, 8), 10);
+	const milliseconds = str.length > 8 ? Math.trunc(Number.parseFloat(str.slice(8), 10) * 1000) : 0;
+	if (hours > 23) throw new RangeError('Hours value out of bounds');
+	if (minutes > 59) throw new RangeError('Minutes value out of bounds');
+	if (seconds > 60) throw new RangeError('Seconds value out of bounds');
+	return { hours, minutes, seconds, milliseconds };
+}
+
+function parseLocalTime(str) {
+	const { hours, minutes, seconds, milliseconds } = parseTimeString(str);
+	const minutesUTC = minutes + DATE.getTimezoneOffset();
+	return milliseconds + seconds * 1000 + minutesUTC * 60000 + hours * 3600000;
 }
 
 function methodNotSupported() {
@@ -130,6 +139,7 @@ function noTimezoneInformation() {
 
 Object.assign(exports, {
 	LocalTime,
-	parseLocalTime,
 	printTimeString,
+	parseTimeString,
+	parseLocalTime,
 });

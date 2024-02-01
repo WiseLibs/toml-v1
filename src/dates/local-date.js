@@ -1,5 +1,7 @@
 'use strict';
 const LOCAL_DATE = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
+const MAX_DAY = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+const MAX_DAY_LEAP = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
 class LocalDate extends Date {
 	constructor(...args) {
@@ -33,7 +35,7 @@ class LocalDate extends Date {
 	static parse() { throw methodNotSupported(); }
 	static UTC() { throw methodNotSupported(); }
 	static now() { throw methodNotSupported(); }
-	valueOf() { throw noTimezoneInformation(); }
+	// valueOf() { return super.valueOf(); }
 	getTime() { throw noTimezoneInformation(); }
 	setTime() { throw noTimezoneInformation(); }
 	getMilliseconds() { throw noTimeInformation(); }
@@ -84,19 +86,6 @@ class LocalDate extends Date {
 	toJSON() { return this.toISOString(); }
 }
 
-function parseLocalDate(str) {
-	const year = Number.parseInt(str.slice(0, 4), 10);
-	const month = Number.parseInt(str.slice(5, 7), 10);
-	const day = Number.parseInt(str.slice(8, 10), 10);
-	if (month < 1) throw new RangeError('Month value cannot be 0');
-	if (day < 1) throw new RangeError('Day value cannot be 0');
-	const date = new Date(year, month - 1, day, 0, 0, 0, 0);
-	// The Date constructor interprets 2-digit years as relative to 1900.
-	if (year >= 0 && year <= 99) date.setFullYear(date.getFullYear() - 1900);
-	date.setMinutes(safeOffset(date.getTimezoneOffset()));
-	return date.valueOf();
-}
-
 function printDateString(date) {
 	const year = date.getFullYear();
 	if (year < 0) throw new RangeError('Negative years are not supported');
@@ -105,6 +94,25 @@ function printDateString(date) {
 	const strMonth = (date.getMonth() + 1).toString().padStart(2, '0');
 	const strDay = date.getDate().toString().padStart(2, '0');
 	return `${strYear}-${strMonth}-${strDay}`;
+}
+
+function parseDateString(str) {
+	const year = Number.parseInt(str.slice(0, 4), 10);
+	const month = Number.parseInt(str.slice(5, 7), 10);
+	const day = Number.parseInt(str.slice(8, 10), 10);
+	const maxDay = isLeapYear(year) ? MAX_DAY_LEAP[month - 1] : MAX_DAY[month - 1];
+	if (month < 1 || month > 12) throw new RangeError('Month value out of bounds');
+	if (day < 1 || day > maxDay) throw new RangeError('Day value out of bounds');
+	return { year, month, day };
+}
+
+function parseLocalDate(str) {
+	const { year, month, day } = parseDateString(str);
+	const date = new Date(year, month - 1, day, 0, 0, 0, 0);
+	// The Date constructor interprets 2-digit years as relative to 1900.
+	if (year >= 0 && year <= 99) date.setFullYear(date.getFullYear() - 1900);
+	date.setMinutes(safeOffset(date.getTimezoneOffset()));
+	return date.valueOf();
 }
 
 // When constructing a LocalDate from a number or Date, we interpret the UNIX
@@ -118,6 +126,10 @@ function printDateString(date) {
 // to get the local date, without worrying about the timezone.
 function safeOffset(timezoneOffset) {
 	return Math.floor((1440 - timezoneOffset) / 2);
+}
+
+function isLeapYear(year) {
+	return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
 }
 
 function methodNotSupported() {
@@ -134,6 +146,7 @@ function noTimezoneInformation() {
 
 Object.assign(exports, {
 	LocalDate,
-	parseLocalDate,
 	printDateString,
+	parseDateString,
+	parseLocalDate,
 });

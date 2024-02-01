@@ -38,7 +38,6 @@ describe('LocalTime', function () {
 	});
 	it('does not support timezone-related methods', function () {
 		const localTime = new LocalTime();
-		expect(() => localTime.valueOf()).to.throw(TypeError);
 		expect(() => localTime.getTime()).to.throw(TypeError);
 		expect(() => localTime.setTime(1)).to.throw(TypeError);
 		expect(() => localTime.getUTCMilliseconds()).to.throw(TypeError);
@@ -81,6 +80,7 @@ describe('LocalTime', function () {
 			const localTime2 = new LocalTime('21:18:00');
 			const timestamp2 = date2.valueOf() % 86400000;
 			expect(new Date(localTime2).valueOf()).to.equal(timestamp2);
+			expect(() => new LocalTime('23:59:60')).to.not.throw();
 		});
 		it('does not support invalid time strings', function () {
 			expect(() => new LocalTime('21:18:00Z')).to.throw(Error);
@@ -96,6 +96,9 @@ describe('LocalTime', function () {
 			expect(() => new LocalTime('2021-18-00T21:18:00Z')).to.throw(Error);
 			expect(() => new LocalTime('2021-18-00T21:18:00.042')).to.throw(Error);
 			expect(() => new LocalTime('2021-18-00T21:18:00.042Z')).to.throw(Error);
+			expect(() => new LocalTime('24:00:00')).to.throw(Error);
+			expect(() => new LocalTime('23:60:00')).to.throw(Error);
+			expect(() => new LocalTime('23:59:61')).to.throw(Error);
 		});
 		it('does not support other argument types', function () {
 			expect(() => new LocalTime(undefined)).to.throw(TypeError);
@@ -114,6 +117,12 @@ describe('LocalTime', function () {
 		});
 	});
 	describe('supported methods', function () {
+		specify('valueOf()', function () {
+			const date = new Date(0);
+			date.setHours(21);
+			date.setMinutes(18);
+			expect(new LocalTime('21:18:00').valueOf()).to.equal(date.valueOf());
+		});
 		specify('getMilliseconds()', function () {
 			expect(new LocalTime('21:18:00').getMilliseconds()).to.equal(0);
 			expect(new LocalTime('21:18:00.042').getMilliseconds()).to.equal(42);
@@ -202,8 +211,6 @@ describe('LocalTime', function () {
 	});
 	describe('normalization', function () {
 		specify('constructor', function () {
-			const offset = new Date(0).getTimezoneOffset() * 60000;
-			expect(new Date(new LocalTime('99:99:99.999')).valueOf()).to.equal(16839999 + offset);
 			expect(new Date(new LocalTime(86400000 + 1234567)).valueOf()).to.equal(1234567);
 			expect(new Date(new LocalTime(-1234567)).valueOf()).to.equal(86400000 - 1234567);
 		});

@@ -4,7 +4,7 @@ const { File } = require('super-sources');
 const WHITESPACE = /[\x20\t]+/y;
 const NEWLINE = /\r?\n/y;
 const EMPTY_LINES = /(?:\r?\n|[\x20\t])+/y;
-const COMMENT = /#[^\n]*/y;
+const COMMENT = /#[^\x00-\x08\x0a-\x1f\x7f]*/y;
 
 /*
 	A basic parser that can match against strings or RexExp objects, and can

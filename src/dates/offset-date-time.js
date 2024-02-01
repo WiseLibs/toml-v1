@@ -1,4 +1,6 @@
 'use strict';
+const { parseTimeString } = require('./local-time');
+const { parseDateString } = require('./local-date');
 const OFFSET_DATE_TIME = /^[0-9]{4}-[0-9]{2}-[0-9]{2}[Tt\x20][0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]+)?(?:[Zz]|[+-][0-9]{2}:[0-9]{2})$/;
 const OFFSET = Symbol();
 
@@ -65,14 +67,6 @@ class OffsetDateTime extends Date {
 }
 
 function parseOffsetDateTime(str) {
-	const year = Number.parseInt(str.slice(0, 4), 10);
-	const month = Number.parseInt(str.slice(5, 7), 10);
-	const day = Number.parseInt(str.slice(8, 10), 10);
-	if (month < 1) throw new RangeError('Month value cannot be 0');
-	if (day < 1) throw new RangeError('Day value cannot be 0');
-	const hours = Number.parseInt(str.slice(11, 13), 10);
-	const minutes = Number.parseInt(str.slice(14, 16), 10);
-	const seconds = Number.parseInt(str.slice(17, 19), 10);
 	let offset = 0;
 	let tailLength = 1;
 	if (!str.endsWith('Z') && !str.endsWith('z')) {
@@ -82,7 +76,8 @@ function parseOffsetDateTime(str) {
 		offset = sign * (offsetHours * 60 + offsetMinutes);
 		tailLength = 6;
 	}
-	const milliseconds = str.length > 19 + tailLength ? Math.trunc(Number.parseFloat(str.slice(19, -tailLength), 10) * 1000) : 0;
+	const { year, month, day } = parseDateString(str);
+	const { hours, minutes, seconds, milliseconds } = parseTimeString(str.slice(11, -tailLength));
 	const date = new Date(Date.UTC(year, month - 1, day, hours, minutes + offset, seconds, milliseconds));
 	// The Date constructor interprets 2-digit years as relative to 1900.
 	if (year >= 0 && year <= 99) date.setUTCFullYear(date.getUTCFullYear() - 1900);

@@ -297,7 +297,7 @@ function specialFloatLiteral(parser) {
 
 function dateLiteral(parser) {
 	const date = parser.getCaptured();
-	if (!parser.accept(/[Tt\x20]/y)) {
+	if (!parser.accept(/[Tt]|\x20(?=[0-9])/y)) {
 		const value = safeParse(parseLocalDate, date);
 		return new ast.LocalDateNode(date, new LocalDate(value));
 	}
@@ -306,13 +306,13 @@ function dateLiteral(parser) {
 	if (parser.accept(/[Zz]|[+-][0-9]{2}:[0-9]{2}/y)) {
 		const source = date.to(parser.getCaptured());
 		const { value, offset } = safeParse(parseOffsetDateTime, source);
-		const date = new OffsetDateTime(value);
-		date[OFFSET] = offset;
-		return new ast.OffsetDateTimeNode(source, date);
+		const offsetDateTime = new OffsetDateTime(value);
+		offsetDateTime[OFFSET] = offset;
+		return new ast.OffsetDateTimeNode(source, offsetDateTime);
 	} else {
 		const source = date.to(time);
 		const value = safeParse(parseLocalDateTime, source);
-		return new ast.LocalDateTimeNode(source, new LocalDateTimeNode(value));
+		return new ast.LocalDateTimeNode(source, new LocalDateTime(value));
 	}
 }
 

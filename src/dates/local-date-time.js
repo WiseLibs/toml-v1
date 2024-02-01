@@ -1,7 +1,7 @@
 'use strict';
+const { printTimeString, parseTimeString } = require('./local-time');
+const { printDateString, parseDateString } = require('./local-date');
 const LOCAL_DATE_TIME = /^[0-9]{4}-[0-9]{2}-[0-9]{2}[Tt\x20][0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]+)?$/;
-const { printTimeString } = require('./local-time');
-const { printDateString } = require('./local-date');
 
 class LocalDateTime extends Date {
 	constructor(...args) {
@@ -29,7 +29,7 @@ class LocalDateTime extends Date {
 	static parse() { throw methodNotSupported(); }
 	static UTC() { throw methodNotSupported(); }
 	static now() { throw methodNotSupported(); }
-	valueOf() { throw noTimezoneInformation(); }
+	// valueOf() { return super.valueOf(); }
 	getTime() { throw noTimezoneInformation(); }
 	setTime() { throw noTimezoneInformation(); }
 	// getMilliseconds() { return super.getMilliseconds(); }
@@ -87,15 +87,8 @@ class LocalDateTime extends Date {
 }
 
 function parseLocalDateTime(str) {
-	const year = Number.parseInt(str.slice(0, 4), 10);
-	const month = Number.parseInt(str.slice(5, 7), 10);
-	const day = Number.parseInt(str.slice(8, 10), 10);
-	if (month < 1) throw new RangeError('Month value cannot be 0');
-	if (day < 1) throw new RangeError('Day value cannot be 0');
-	const hours = Number.parseInt(str.slice(11, 13), 10);
-	const minutes = Number.parseInt(str.slice(14, 16), 10);
-	const seconds = Number.parseInt(str.slice(17, 19), 10);
-	const milliseconds = str.length > 19 ? Math.trunc(Number.parseFloat(str.slice(19), 10) * 1000) : 0;
+	const { year, month, day } = parseDateString(str);
+	const { hours, minutes, seconds, milliseconds } = parseTimeString(str.slice(11));
 	const date = new Date(year, month - 1, day, hours, minutes, seconds, milliseconds);
 	// The Date constructor interprets 2-digit years as relative to 1900.
 	if (year >= 0 && year <= 99) date.setFullYear(date.getFullYear() - 1900);

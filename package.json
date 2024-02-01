@@ -12,7 +12,8 @@
   "main": "src/index.js",
   "types": "src/types.d.ts",
   "scripts": {
-    "test": "mocha --slow=100 --timeout=5000"
+    "setup": "git submodule update --init --recursive",
+    "test": "npm run setup && mocha --slow=100 --timeout=5000 --exclude=toml-test/**"
   },
   "dependencies": {
     "super-sources": "^1.1.1"
