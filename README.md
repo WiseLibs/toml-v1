@@ -49,7 +49,7 @@ assert(localTime.toString() === '12:42:42');
 
 ### Source tracking
 
-By using the `SourceTracker`, you can retrieve [`Source`](https://github.com/WiseLibs/super-sources?tab=readme-ov-file#new-sourcefile-start-end) objects corresponding to each key and value in the original TOML file.
+By using the `SourceTracker`, you can retrieve [`Source`](https://github.com/WiseLibs/super-sources?tab=readme-ov-file#new-sourcefile-start-end) objects corresponding to each key and value in the TOML file.
 
 ```js
 import { parser, SourceTracker } from 'toml-v1';
