@@ -11,6 +11,7 @@ const ast = require('./ast');
 module.exports = (definitions, tracker) => {
 	const explicitTables = new Set();
 	const implicitTables = new Set();
+	const redefinableTables = new Set();
 	const appendableArrays = new Set();
 	return buildRoot();
 
@@ -35,7 +36,7 @@ module.exports = (definitions, tracker) => {
 		return root;
 	}
 
-	function traverse(obj, keyPath, traverseAny = false) {
+	function traverse(obj, keyPath, isNewScope = false) {
 		const length = keyPath.length - 1;
 		for (let i = 0; i < length; ++i) {
 			const keyPart = keyPath[i];
@@ -44,14 +45,15 @@ module.exports = (definitions, tracker) => {
 			if (value === undefined) {
 				const table = createTable();
 				implicitTables.add(table);
+				isNewScope && redefinableTables.add(table);
 				tracker && track(obj, key, keyPart.source, getKeySource(keyPath, i));
 				obj[key] = table;
 				obj = table;
 			} else if (implicitTables.has(value)) {
 				obj = value;
-			} else if (traverseAny && explicitTables.has(value)) {
+			} else if (isNewScope && explicitTables.has(value)) {
 				obj = value;
-			} else if (traverseAny && appendableArrays.has(value)) {
+			} else if (isNewScope && appendableArrays.has(value)) {
 				obj = value[value.length - 1];
 			} else {
 				const source = getKeySource(keyPath, i);
@@ -66,12 +68,19 @@ module.exports = (definitions, tracker) => {
 
 		const keyPart = keyPath[keyPath.length - 1];
 		const key = keyPart.value;
-		if (obj[key] === undefined) {
+		const value = obj[key];
+		if (value === undefined) {
 			const table = createTable();
 			explicitTables.add(table);
 			tracker && track(obj, key, keyPart.source, source);
 			obj[key] = table;
 			return table;
+		} else if (redefinableTables.has(value)) {
+			redefinableTables.delete(value);
+			implicitTables.delete(value);
+			explicitTables.add(value);
+			tracker && track(obj, key, keyPart.source, source);
+			return value;
 		} else {
 			const source = getKeySource(keyPath);
 			throw source.error('Cannot redefine existing key').done();
