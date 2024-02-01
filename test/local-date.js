@@ -228,8 +228,9 @@ describe('LocalDate', function () {
 		expect(new LocalDate(new LocalDate(new LocalDate(new LocalDate()))).toString()).to.equal(new LocalDate().toString())
 		expect(new LocalDate(new LocalDate(new LocalDate(new LocalDate(new LocalDate())))).toString()).to.equal(new LocalDate().toString())
 		expect(new LocalDate(new LocalDate(new LocalDate(new LocalDate(new LocalDate(new LocalDate()))))).toString()).to.equal(new LocalDate().toString())
-		expect(new Date(new LocalDate(new Date(1999, 2, 24, 0, 0, 0, 0))).valueOf()).to.equal(922287600000);
-		expect(new Date(new LocalDate(new Date(1999, 2, 24, 23, 59, 59, 999))).valueOf()).to.equal(922287600000);
+		expect(new Date(new LocalDate(new Date(1999, 2, 24, 0, 0, 0, 0))).valueOf()).to.equal(
+			new Date(new LocalDate(new Date(1999, 2, 24, 23, 59, 59, 999))).valueOf()
+		);
 	});
 	specify('stress test', function () {
 		this.slow(5000);

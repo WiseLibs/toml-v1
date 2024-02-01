@@ -3,7 +3,7 @@ const { expect } = require('chai');
 const { OffsetDateTime } = require('..');
 
 const OFFSET = new Date().getTimezoneOffset();
-const SUFFIX = (
+const SUFFIX = OFFSET === 0 ? 'Z' : (
 	(OFFSET > 0 ? '-' : '+')
 	+ Math.trunc(OFFSET / 60).toString().padStart(2, '0') + ':'
 	+ (OFFSET % 60).toString().padStart(2, '0')
