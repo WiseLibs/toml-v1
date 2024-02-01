@@ -1,11 +1,13 @@
 # toml-v1 [![test](https://github.com/WiseLibs/toml-v1/actions/workflows/test.yml/badge.svg)](https://github.com/WiseLibs/toml-v1/actions/workflows/test.yml)
 
-A TOML parser, compatible with TOML version [v1.0.0](https://toml.io/en/v1.0.0). It has the additional ability to track the source locations of keys and values after parsing ([see below](#source-tracking)).
+A TOML parser compatible with TOML version [v1.0.0](https://toml.io/en/v1.0.0).
 
 This package passes [the TOML test suite](https://github.com/toml-lang/toml-test), except for a few tests that fall into these categories:
 
 - Tests for 64-bit integers (JavaScript numbers only have 53 bits of precision)
 - Tests for detecting invalid UTF-8 (not applicable to JavaScript strings)
+
+It has the additional ability to track the source locations of keys and values after parsing ([see below](#source-tracking)).
 
 ## Installation
 
@@ -25,7 +27,7 @@ const data = parse('[foo]\nbar = 123');
 assert(data.foo.bar === 123);
 ```
 
-#### Parsing dates
+### Parsing dates
 
 TOML defines four types of dates:
 
@@ -45,7 +47,7 @@ assert(localTime.getHours() === 12);
 assert(localTime.toString() === '12:42:42');
 ```
 
-#### Source tracking
+### Source tracking
 
 By using the `SourceTracker`, you can retrieve [`Source`](https://github.com/WiseLibs/super-sources?tab=readme-ov-file#new-sourcefile-start-end) objects corresponding to each key or value in the TOML file.
 
