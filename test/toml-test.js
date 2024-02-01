@@ -1,6 +1,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const { EOL } = require('os');
 const { expect } = require('chai');
 const { SourceError } = require('super-sources');
 const { parse, LocalTime, LocalDate, LocalDateTime, OffsetDateTime } = require('..');
@@ -41,7 +42,7 @@ describe('Official TOML test suite', function () {
 		let json;
 
 		if (testName.startsWith('valid/')) {
-			json = JSON.parse(fs.readFileSync(completePath.slice(0, -5) + '.json'), 'utf8');
+			json = JSON.parse(normalizeLines(fs.readFileSync(completePath.slice(0, -5) + '.json', 'utf8')));
 		} else if (!testName.startsWith('invalid/')) {
 			throw new TypeError('Unexpected test name');
 		}
@@ -102,4 +103,10 @@ function format(table) {
 		clone[key] = format(value);
 	}
 	return clone;
+}
+
+function normalizeLines(str) {
+	if (EOL === '\n') return str;
+	if (EOL === '\r\n') return str.replace(/\\n/g, '\\r\\n');
+	throw new TypeError('Unexpected EOL');
 }
