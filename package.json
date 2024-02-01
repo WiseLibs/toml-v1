@@ -1,7 +1,7 @@
 {
   "name": "toml-v1",
   "version": "1.0.0",
-  "description": "A TOML v1.x.x spec-compliant parser",
+  "description": "A TOML v1.0.0 spec-compliant parser",
   "author": "Joshua Wise <joshuathomaswise@gmail.com>",
   "homepage": "http://github.com/WiseLibs/toml-v1",
   "repository": {
