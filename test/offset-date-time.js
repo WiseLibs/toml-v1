@@ -106,9 +106,19 @@ describe('OffsetDateTime', function () {
 		});
 	});
 	describe('supported methods', function () {
-		specify('valueOf()');
-		specify('getTime()');
-		specify('setTime()');
+		specify('valueOf()', function () {
+			expect(new OffsetDateTime('1999-03-24T21:18:00Z').valueOf()).to.equal(922310280000);
+		});
+		specify('getTime()', function () {
+			expect(new OffsetDateTime('1999-03-24T21:18:00Z').getTime()).to.equal(922310280000);
+		});
+		specify('setTime()', function () {
+			const offsetDateTime = new OffsetDateTime('1999-03-24T21:18:00Z');
+			offsetDateTime.setTime(0);
+			expect(offsetDateTime.getTime()).to.equal(0);
+			offsetDateTime.setTime(922310280001);
+			expect(offsetDateTime.getTime()).to.equal(922310280001);
+		});
 		specify('getMilliseconds()', function () {
 			expect(new OffsetDateTime('1999-03-24T21:18:00' + SUFFIX).getMilliseconds()).to.equal(0);
 			expect(new OffsetDateTime('1999-03-24T21:18:00.042' + SUFFIX).getMilliseconds()).to.equal(42);
